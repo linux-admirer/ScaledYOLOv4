@@ -52,6 +52,7 @@ from xml.etree.ElementTree import dump
     ...
 }
 """
+import traceback
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
     """
@@ -779,7 +780,7 @@ class BDD:
                 filename = json_obj["name"]
                 fullpath = os.path.abspath(os.path.join(img_path, filename))
 
-                if os.path.exists(fullpath) == False:
+                if not os.path.exists(fullpath):
                     continue
                 filename = filename.split(".")[0]
 
@@ -796,29 +797,33 @@ class BDD:
 
                 label_counter = 0
                 for label in json_obj["labels"]:
+                    try:
+                        bndbox = {
+                            "xmin": label["box2d"]["x1"],
+                            "ymin": label["box2d"]["y1"],
+                            "xmax": label["box2d"]["x2"],
+                            "ymax": label["box2d"]["y2"]
+                        }
 
-                    bndbox = {
-                        "xmin": label["box2d"]["x1"],
-                        "ymin": label["box2d"]["y1"],
-                        "xmax": label["box2d"]["x2"],
-                        "ymax": label["box2d"]["y2"]
-                    }
+                        cls = label["category"]
 
-                    cls = label["category"]
+                        obj_info = {
+                            "name": cls,
+                            "bndbox": bndbox
+                        }
 
-                    obj_info = {
-                        "name": cls,
-                        "bndbox": bndbox
-                    }
+                        obj = {
+                            "num_obj": str(label_counter + 1),
+                            str(label_counter): obj_info
+                        }
 
-                    obj = {
-                        "num_obj": str(label_counter + 1),
-                        str(label_counter): obj_info
-                    }
+                        data[filename]["objects"] = {**data[filename]["objects"], **obj}
 
-                    data[filename]["objects"] = {**data[filename]["objects"], **obj}
-
-                    label_counter = label_counter + 1
+                        label_counter = label_counter + 1
+                    except Exception as e:
+                        msg = "ERROR : {}, ".format(str(e), traceback.format_exc())
+                        data.pop(filename)
+                        
                 printProgressBar(progress_cnt + 1, progress_length, prefix='BDD Parsing:'.ljust(15), suffix='Complete', length=40)
                 progress_cnt += 1
             return True, data
@@ -827,6 +832,6 @@ class BDD:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
-            msg = "ERROR : {}, moreInfo : {}\t{}\t{}".format(e, exc_type, fname, exc_tb.tb_lineno)
+            msg = "ERROR : {}, moreInfo : {}".format(e, traceback.format_exc())
 
             return False, msg
