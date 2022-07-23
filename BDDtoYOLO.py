@@ -1,6 +1,6 @@
 import os
 
-from format import BDD,YOLO
+from dataformats import BDD,YOLO
 
 def convertBDDtoYOLO(dict:config) -> bool:
     if config["datasets"] != "BDD":
