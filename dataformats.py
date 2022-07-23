@@ -821,7 +821,7 @@ class BDD:
 
                         label_counter = label_counter + 1
                     except Exception as e:
-                        msg = "ERROR : {}, ".format(str(e), traceback.format_exc())
+                        msg = "ERROR : {}, {}".format(str(e), traceback.format_exc())
                 
                 if label_counter == 0:
                     del data[filename]
