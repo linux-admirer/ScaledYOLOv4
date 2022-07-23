@@ -822,8 +822,10 @@ class BDD:
                         label_counter = label_counter + 1
                     except Exception as e:
                         msg = "ERROR : {}, ".format(str(e), traceback.format_exc())
-                        data.pop(filename)
-                        
+                
+                if label_counter == 0:
+                    del data[filename]
+
                 printProgressBar(progress_cnt + 1, progress_length, prefix='BDD Parsing:'.ljust(15), suffix='Complete', length=40)
                 progress_cnt += 1
             return True, data
