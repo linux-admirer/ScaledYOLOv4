@@ -42,7 +42,7 @@ def _removeImagesWithoutLabel(config):
 	for filename in os.listdir(outputLabelDir):
 		imagesFound[os.path.splitext(filename)[0]] = True
 	for filename in os.listdir(imagesDir):
-		filenameWithoutExt = os.path.splitext(filename)
+		filenameWithoutExt = os.path.splitext(filename)[0]
 		if not filenameWithoutExt in imagesFound:
 			_deleteFile(os.path.join(imagesDir, filename))
 
