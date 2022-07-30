@@ -1,0 +1,6 @@
+train: ../bdd100k/images/train
+val: ../bdd100k/images/val
+test: ../bdd100k/images/test
+
+nc: 10
+names: ['pedestrian', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle', 'bicycle', 'traffic light', 'traffic sign']
