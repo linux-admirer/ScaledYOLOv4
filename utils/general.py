@@ -1085,8 +1085,8 @@ def output_to_target(output, width, height):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     targets = []
     for i, o in enumerate(output):
-        if isinstance(output, torch.Tensor):
-            output = output.cpu().numpy()
+        if isinstance(o, torch.Tensor):
+            o = o.cpu().numpy()
 
         if o is not None:
             for pred in o:
