@@ -553,7 +553,7 @@ def build_targets(p, targets, model):
 
         # Append
         a = t[:, 6].long()  # anchor indices
-        indices.append((b, a, gj.clamp_(0, gain[3]), gi.clamp_(0, gain[2])))  # image, anchor, grid indices
+        indices.append((b, a, gj.clamp_(0, gain[3].long()), gi.clamp_(0, gain[2].long())))  # image, anchor, grid indices
         tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
         anch.append(anchors[a])  # anchors
         tcls.append(c)  # class
@@ -1084,10 +1084,10 @@ def fitness(x):
 def output_to_target(output, width, height):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     if isinstance(output, torch.Tensor):
-        output = output.cpu().numpy()
+        output1 = output.cpu().numpy()
 
     targets = []
-    for i, o in enumerate(output):
+    for i, o in enumerate(output1):
         if o is not None:
             for pred in o:
                 box = pred[:4]
