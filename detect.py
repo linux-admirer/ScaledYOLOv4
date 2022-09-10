@@ -8,13 +8,105 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import numpy as np
 from numpy import random
 
-from models.experimental import attempt_load
-from utils.datasets import LoadStreams, LoadImages
-from utils.general import (
+from ScaledYOLOv4.models.experimental import attempt_load
+from ScaledYOLOv4.utils.datasets import LoadStreams, LoadImages
+from ScaledYOLOv4.utils.general import (
     check_img_size, non_max_suppression, apply_classifier, scale_coords, xyxy2xywh, plot_one_box, strip_optimizer)
-from utils.torch_utils import select_device, load_classifier, time_synchronized
+from ScaledYOLOv4.utils.torch_utils import select_device, load_classifier, time_synchronized
+
+
+def getPredictions(model, img, device):
+    width = check_img_size(img.size[0], s=model.stride.max())  # check img_size
+    height = check_img_size(img.size[1], s=model.stride.max())  # check img_size
+
+    img = np.array(img)
+    origSize = img.shape
+    print(type(origSize))
+    #img = cv2.resize(im0s, (width, height)).astype(np.float)
+    img = cv2.normalize(img.astype(float), None, norm_type=cv2.NORM_MINMAX)
+    from torchvision import transforms
+    img = transforms.ToTensor()(img).unsqueeze(0).to(device)
+
+    if img.ndimension() == 3:
+        img = img.unsqueeze(0)
+        
+    pred = model(img.float())[0]
+    pred = pred.cpu().detach()
+
+    # Apply NMS
+    pred = non_max_suppression(pred, 0.5, 0.5, agnostic=True)
+
+    names = model.module.names if hasattr(model, 'module') else model.names
+    ret = []
+    for i, det in enumerate(pred):
+        if det is not None and len(det):
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], origSize).round()
+            bbox = {}
+            for *xyxy, conf, cls in det:
+                bbox["xmin"] = float(xyxy[0])
+                bbox["ymin"] = float(xyxy[1])
+                bbox["xmax"] = float(xyxy[2])
+                bbox["ymax"] = float(xyxy[3])
+                bbox["confidence"] = float(conf)
+                bbox["class"] = int(cls)
+                bbox["name"] = '%s' % (names[int(cls)])
+                ret.append(bbox)
+    return ret
+
+
+def detectImage(model, img, device):
+    width = check_img_size(img.size[0], s=model.stride.max())  # check img_size
+    height = check_img_size(img.size[1], s=model.stride.max())  # check img_size
+    write_img = False
+
+    #im0s = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    im0s = np.array(img)
+    #img = cv2.resize(im0s, (width, height)).astype(np.float)
+    #img = im0s.astype(np.float)
+    img = cv2.normalize(im0s.astype(float), None, norm_type=cv2.NORM_MINMAX)
+    from torchvision import transforms
+    img = transforms.ToTensor()(img).unsqueeze(0).to(device)
+
+    #img = torch.from_numpy(img).to(device)
+    if img.ndimension() == 3:
+        img = img.unsqueeze(0)
+        
+    pred = model(img.float())[0]
+    pred = pred.cpu().detach()
+
+    # Apply NMS
+    pred = non_max_suppression(pred, 0.5, 0.5, agnostic=True)
+
+    names = model.module.names if hasattr(model, 'module') else model.names
+    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
+    for i, det in enumerate(pred):  # detections per image
+        s, im0 = '', im0s
+
+        s += '%gx%g ' % img.shape[2:]  # print string
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+
+            # Print results
+            for c in det[:, -1].unique():
+                n = (det[:, -1] == c).sum()  # detections per class
+                s += '%g %ss, ' % (n, names[int(c)])  # add to string
+
+            # Write results
+            for *xyxy, conf, cls in det:
+                label = '%s' % (names[int(cls)])
+                plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+
+        # Print time (inference + NMS)
+        print('%sDone.' % (s))
+
+        # Stream results
+        if write_img:
+            cv2.imwrite("image.png", im0s)
+    return [im0s]
 
 
 def detect(save_img=False):
