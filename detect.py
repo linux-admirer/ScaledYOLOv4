@@ -44,8 +44,8 @@ def getPredictions(model, img, device):
     for i, det in enumerate(pred):
         if det is not None and len(det):
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], origSize).round()
-            bbox = {}
             for *xyxy, conf, cls in det:
+                bbox = {}
                 bbox["xmin"] = float(xyxy[0])
                 bbox["ymin"] = float(xyxy[1])
                 bbox["xmax"] = float(xyxy[2])
