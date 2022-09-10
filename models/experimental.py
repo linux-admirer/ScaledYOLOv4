@@ -129,12 +129,15 @@ class Ensemble(nn.ModuleList):
         return y, None  # inference, train output
 
 
-def attempt_load(weights, map_location=None):
+def attempt_load(weights, map_location=None, stripped=False):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
-        model.append(torch.load(w, map_location=map_location)['model'].float().fuse().eval())  # load FP32 model
+        m = torch.load(w, map_location=map_location)
+        if not stripped:
+            m = m['model']
+        model.append(m.float().fuse().eval())  # load FP32 model
 
     if len(model) == 1:
         return model[-1]  # return model
