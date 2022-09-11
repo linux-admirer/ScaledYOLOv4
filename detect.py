@@ -25,7 +25,7 @@ def getPredictions(model, img, device):
     img = np.array(img)
     origSize = img.shape
     print(type(origSize))
-    #img = cv2.resize(im0s, (width, height)).astype(np.float)
+    img = cv2.resize(img, (width, height)).astype(np.float)
     img = cv2.normalize(img.astype(float), None, norm_type=cv2.NORM_MINMAX)
     from torchvision import transforms
     img = transforms.ToTensor()(img).unsqueeze(0).to(device)
@@ -64,9 +64,9 @@ def detectImage(model, img, device):
 
     #im0s = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     im0s = np.array(img)
-    #img = cv2.resize(im0s, (width, height)).astype(np.float)
+    img = cv2.resize(im0s, (width, height)).astype(np.float)
     #img = im0s.astype(np.float)
-    img = cv2.normalize(im0s.astype(float), None, norm_type=cv2.NORM_MINMAX)
+    img = cv2.normalize(img, None, norm_type=cv2.NORM_MINMAX)
     from torchvision import transforms
     img = transforms.ToTensor()(img).unsqueeze(0).to(device)
 
